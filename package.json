@@ -1,0 +1,12 @@
+{
+  "name": "aviator-pro",
+  "version": "1.0.0",
+  "description": "Aviator Pro — Flight Predictor (Premium)",
+  "main": "index.html",
+  "scripts": {
+    "start": "cordova serve",
+    "build": "cordova build android"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
