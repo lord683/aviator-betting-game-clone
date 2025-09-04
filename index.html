@@ -1,137 +1,546 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Aviator Game</title>
+  <meta charset="utf-8" />
+  <title>Aviator Pro — Flight Predictor (Premium)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0c" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #0f0f0f;
-      color: #fff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
+    :root{
+      --bg:#0b0b0c;
+      --panel:#121214;
+      --panel-2:#17171a;
+      --accent:#e50914;
+      --accent-2:#E59407;
+      --text:#fafafa;
+      --muted:#a8a8ad;
+      --success:#2ecc71;
+      --warn:#f39c12;
+      --danger:#ff4757;
+      --line:#27272a;
     }
-
-    #game-container {
-      max-width: 800px;
-      margin: 50px auto;
-      background-color: #1a1a1a;
-      padding: 20px;
-      border-radius: 10px;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:linear-gradient(180deg,#0b0b0c,#131316);
+      color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
-
-    canvas {
-      background-color: #222;
-      display: block;
-      margin: 0 auto 20px auto;
-      border: 2px solid #4CAF50;
-      border-radius: 5px;
+    .wrap{min-height:100dvh;display:flex;flex-direction:column}
+    header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.35);backdrop-filter: blur(6px);
+      position:sticky;top:0;z-index:20;
     }
-
-    #controls input {
-      padding: 10px;
-      font-size: 16px;
-      width: 150px;
-      margin-right: 10px;
-      border-radius: 5px;
-      border: none;
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:34px;height:34px;border-radius:50%;background:
+      radial-gradient(circle at 30% 30%, #ff6b6b, #c0392b 70%);}
+    .brand h1{margin:0;font-size:16px;letter-spacing:.6px}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--panel-2);color:var(--text);
+      padding:10px 14px;border-radius:10px;cursor:pointer;transition:.2s}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:var(--accent);border-color:#b20710}
+    .btn.success{background:var(--success);border-color:#1f9d58}
+    .btn.ghost{background:transparent}
+    .btn.block{width:100%}
+    .grid{display:grid;gap:12px}
+    main{flex:1;display:grid;place-items:center;padding:16px}
+    .stage{
+      width:min(920px,100%);background:linear-gradient(180deg,#141417,#0e0e10);
+      border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.45);
+      overflow:hidden;
     }
-
-    #controls button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #4CAF50;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+    .stage-head{
+      display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+      padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.25)
     }
-
-    #controls button:hover {
-      background-color: #45a049;
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;background:#121214;border:1px solid var(--line);color:var(--muted)}
+    .pill strong{color:var(--text)}
+    canvas{display:block;width:100%;height:auto;background:radial-gradient(1200px 300px at 50% 120%, #1a1a1f, #0d0d10)}
+    .hud{
+      display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr; padding:12px;border-top:1px solid var(--line);background:#101013
     }
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+    label.small{font-size:12px;color:var(--muted)}
+    input,select{
+      width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+      background:#0d0d10;color:var(--text);outline:none
+    }
+    .actions{display:flex;gap:8px}
+    .mult{
+      font-size:38px;font-weight:800;letter-spacing:1px;text-shadow:0 2px 0 rgba(0,0,0,.4);
+    }
+    .hint{font-size:13px;color:#ffd166}
+    .paywall{
+      position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.72),rgba(0,0,0,.88));
+      display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999;
+    }
+    .sheet{
+      width:min(520px,100%); background:linear-gradient(180deg,#161619,#0f0f12);
+      border:1px solid var(--line);border-radius:18px; padding:16px; box-shadow:0 20px 60px rgba(0,0,0,.6)
+    }
+    .sheet h2{margin:6px 0 12px 0}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .muted{color:var(--muted)}
+    .list{margin:0;padding-left:18px}
+    .sep{height:1px;background:var(--line);margin:12px 0}
+    footer{padding:14px;text-align:center;color:var(--muted)}
+    a{color:#ddd}
+    .link{color:#ffd166;cursor:pointer}
+    .badge{display:inline-block;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:#121214;font-size:12px}
+    .toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#202024;color:var(--text);border:1px solid var(--line);padding:10px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:99999}
+    .terms{max-height:45dvh;overflow:auto;font-size:13px;white-space:pre-line;background:#0f0f12;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .green{color:var(--success)} .red{color:var(--danger)}
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <h1>🚀 My Aviator Game</h1>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="controls">
-      <input type="number" id="betInput" placeholder="Enter Bet" />
-      <button id="betButton">Place Bet</button>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo"></div>
+      <h1>Aviator Pro • Premium</h1>
     </div>
-    <div id="info">
-      <p>Balance: <span id="balance">1000</span></p>
-      <p>Multiplier: <span id="multiplier">1.00x</span></p>
+    <div class="actions">
+      <button class="btn" id="btnIntro">Introduction</button>
+      <button class="btn ghost" id="btnTerms">Terms</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="stage" id="stage">
+      <div class="stage-head">
+        <div class="pill"><span>Balance</span> <strong id="balance">$0.00</strong></div>
+        <div class="pill"><span>Last Crash</span> <strong id="lastCrash">—</strong></div>
+        <div class="pill"><span>Status</span> <strong id="status">Idle</strong></div>
+      </div>
+
+      <canvas id="game" width="1200" height="420"></canvas>
+
+      <div class="hud">
+        <div class="card grid">
+          <label class="small">Bet Amount ($)</label>
+          <input id="bet" type="number" min="1" step="1" value="10" />
+          <div class="row">
+            <button class="btn" data-quick="5">$5</button>
+            <button class="btn" data-quick="10">$10</button>
+            <button class="btn" data-quick="20">$20</button>
+            <button class="btn" data-quick="50">$50</button>
+          </div>
+        </div>
+
+        <div class="card grid" style="align-items:center;justify-items:center">
+          <div class="mult" id="mult">1.00x</div>
+          <div class="hint" id="hint">Assistant: waiting for launch…</div>
+        </div>
+
+        <div class="card grid">
+          <label class="small">Controls</label>
+          <div class="row">
+            <button class="btn primary" id="btnStart">Start</button>
+            <button class="btn success" id="btnCash">Cash Out</button>
+            <button class="btn" id="btnMute">🔊</button>
+          </div>
+          <div class="row">
+            <span class="badge">Target: <span id="targetText">—</span></span>
+            <span class="badge">Streak: <span id="streak">0</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span class="muted">© 2025 Aviator Pro • Entertainment & strategy tool. </span>
+    <span class="link" id="openTerms">Terms & Conditions</span>
+  </footer>
+</div>
+
+<!-- PAYWALL -->
+<div class="paywall" id="paywall">
+  <div class="sheet">
+    <h2>Unlock Premium • <span class="green">$30</span></h2>
+    <p class="muted">Pay once. Lifetime access on this device. Secure checkout via Gumroad.</p>
+
+    <div class="sep"></div>
+
+    <div class="grid">
+      <div class="row">
+        <button class="btn primary" id="btnBuy">$30 • Buy Now</button>
+        <button class="btn" id="btnIHaveKey">I already have a license</button>
+      </div>
+
+      <div id="licenseBox" style="display:none" class="grid">
+        <label class="small">Paste your Gumroad license key</label>
+        <input id="licenseKey" placeholder="XXXX-XXXX-XXXX-XXXX" />
+        <button class="btn primary" id="btnVerify">Verify & Unlock</button>
+      </div>
+
+      <details>
+        <summary class="link">Why payment first?</summary>
+        <div class="muted" style="margin-top:8px">
+          This premium app includes an interactive flight simulator, smart cash-out hints, and live chat support.
+          Payment is handled by Gumroad. We do not see or store your card details.
+        </div>
+      </details>
+
+      <div class="sep"></div>
+
+      <button class="btn" id="btnIntro2">📘 Introduction</button>
     </div>
   </div>
+</div>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+<!-- INTRO SHEET -->
+<div class="paywall" id="intro" style="display:none">
+  <div class="sheet">
+    <h2>📘 Introduction</h2>
+    <p class="muted">Read this before playing.</p>
+    <div class="sep"></div>
 
-    let balance = 1000;
-    let multiplier = 1;
-    let running = false;
+    <h3>How to Play</h3>
+    <ol class="list">
+      <li>Enter your bet amount.</li>
+      <li>Press <b>Start</b> to launch the plane.</li>
+      <li>Watch the multiplier increase.</li>
+      <li>Press <b>Cash Out</b> before the plane crashes to win.</li>
+    </ol>
+    <p class="muted"><i>*Note: Only play after completing payment.*</i></p>
 
-    const balanceEl = document.getElementById("balance");
-    const multiplierEl = document.getElementById("multiplier");
-    const betInput = document.getElementById("betInput");
-    const betButton = document.getElementById("betButton");
+    <h3>Aviator Assistant</h3>
+    <ul class="list">
+      <li><b>Follow Aviator Rules</b> – Your Aviator Assistant analyzes flight rhythm and will <u>suggest when to cash out</u> based on recent multiplier trends.</li>
+      <li><b>Plan Your Strategy</b> – The Assistant provides <u>smart hints</u> during the round, helping you decide the safest moments to collect winnings.</li>
+      <li><b>Risk Tips</b> – After low crashes, expect safer early exits (1.2–1.5x). After steady mid-runs, target 1.6–2.2x. Hot streaks? Consider partial cash-outs.</li>
+    </ul>
 
-    function resetGame() {
-      multiplier = 1;
-      running = false;
-      multiplierEl.textContent = multiplier.toFixed(2) + "x";
+    <p class="muted">This app is for entertainment and training purposes only. Outcomes are simulated; no guarantees of real-world results.</p>
+
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="introClose">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- TERMS SHEET -->
+<div class="paywall" id="terms" style="display:none">
+  <div class="sheet">
+    <h2>Terms & Conditions</h2>
+    <div class="terms">
+      <b>License</b>
+      You receive a non-transferable license for personal use on this device.
+      
+      <b>Payments</b>
+      Payments are processed by Gumroad. Refunds are subject to Gumroad policy and our fair-use policy.
+
+      <b>Disclaimer</b>
+      This is an entertainment/strategy tool. We do not promise winnings.
+
+      <b>Privacy</b>
+      We do not store any card data. Chat support is provided via Tawk.to.
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="termsClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" style="display:none"></div>
+
+<script>
+/** ============== CONFIG ============== **/
+const GUMROAD_PRODUCT_PERMALINK = "your-product-permalink"; // <-- REPLACE with your Gumroad product permalink
+const TAWK_WIDGET_ID = "66685eea981b6c56477bfb63/1hv0k1j27"; // your Tawk widget id
+const PRICE_USD = 30;
+
+/** ============== STATE ============== **/
+let paid = false;
+let muted = false;
+let balance = 1000;
+let currentMult = 1.00;
+let running = false;
+let crashed = false;
+let targetSuggestion = null;
+let streak = 0;
+let crashHistory = [];
+
+/** ============== UI HOOKS ============== **/
+const el = (id)=>document.getElementById(id);
+const $paywall = el("paywall");
+const $stage = el("stage");
+const $mult = el("mult");
+const $status = el("status");
+const $balance = el("balance");
+const $lastCrash = el("lastCrash");
+const $hint = el("hint");
+const $streak = el("streak");
+const $targetText = el("targetText");
+const $bet = el("bet");
+const $btnStart = el("btnStart");
+const $btnCash = el("btnCash");
+const $btnIntro = el("btnIntro");
+const $btnIntro2 = el("btnIntro2");
+const $btnTerms = el("btnTerms");
+const $openTerms = el("openTerms");
+const $intro = el("intro");
+const $terms = el("terms");
+const $toast = el("toast");
+
+/** ============== SOUNDS ============== **/
+const sfx = {
+  fly: new Audio("data:audio/mp3;base64,//uQZAAAAAAAAAAAA..."),
+  cash: new Audio("data:audio/mp3;base64,//uQZAAAAAAAAAAAA..."),
+  crash: new Audio("data:audio/mp3;base64,//uQZAAAAAAAAAAAA...")
+};
+// (Note: using data URIs placeholders; you can replace with short mp3s)
+// respect mute
+Object.values(sfx).forEach(a=>a.volume=0.6);
+
+/** ============== CANVAS GAME ============== **/
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+function drawBackground(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // horizon
+  ctx.fillStyle="#0e0e12";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // runway line
+  ctx.strokeStyle="#2b2b31";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(0,canvas.height-60);
+  ctx.lineTo(canvas.width, canvas.height-60);
+  ctx.stroke();
+}
+
+function drawPlane(y){
+  // simple triangle plane
+  const x = 120; // left anchor
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = "#e50914";
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.lineTo(40,8);
+  ctx.lineTo(0,16);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+let t0=0, animId=null;
+let planeY = canvas.height-120;
+
+function loop(ts){
+  if(!t0) t0 = ts;
+  const dt = (ts - t0)/1000; // seconds since round start
+  drawBackground();
+
+  // multiplier curve ~ grows then risk spikes
+  if(running && !crashed){
+    currentMult = Math.max(1, 1 + dt*0.9 + Math.pow(dt, 1.35)*0.25);
+    // Crash probability rises with time; stochastic
+    const pCrash = Math.min(0.96, 0.02 + dt*0.055);
+    if(Math.random() < pCrash*0.016){ // per-frame
+      crashed = true;
+      onCrash();
     }
+    planeY = Math.max(80, planeY - (50 + dt*40)*0.016);
+  }
 
-    function startGame() {
-      if (running) return;
-      const bet = parseFloat(betInput.value);
-      if (isNaN(bet) || bet <= 0 || bet > balance) {
-        alert("Invalid bet amount!");
-        return;
-      }
+  drawPlane(planeY);
+  $mult.textContent = currentMult.toFixed(2) + "x";
+  animId = requestAnimationFrame(loop);
+}
 
-      running = true;
-      let crashed = false;
-      const crashPoint = Math.random() * 10 + 1; // crash multiplier
+function resetRound(){
+  t0 = performance.now();
+  planeY = canvas.height-120;
+  currentMult = 1.00;
+  crashed = false;
+  targetSuggestion = null;
+  $targetText.textContent = "—";
+  $status.textContent = "Running";
+  setHint("Assistant analyzing…");
+  if(!muted) sfx.fly.play().catch(()=>{});
+}
 
-      const interval = setInterval(() => {
-        if (!running) {
-          clearInterval(interval);
-          return;
-        }
-        multiplier += 0.01;
-        multiplierEl.textContent = multiplier.toFixed(2) + "x";
+function onCrash(){
+  if(!muted) sfx.crash.play().catch(()=>{});
+  $status.textContent = "Crashed";
+  crashHistory.push(currentMult);
+  $lastCrash.textContent = currentMult.toFixed(2) + "x";
+  if(crashHistory.length>20) crashHistory.shift();
 
-        if (multiplier >= crashPoint) {
-          crashed = true;
-          running = false;
-          balance -= bet;
-          balanceEl.textContent = balance.toFixed(2);
-          alert("Crashed! You lost the bet.");
-          clearInterval(interval);
-          resetGame();
-        }
-      }, 50);
+  // streak logic
+  if(currentMult < 1.35){ streak++; } else { streak = 0; }
+  $streak.textContent = String(streak);
 
-      betButton.onclick = () => {
-        if (!running) return;
-        running = false;
-        balance += bet * multiplier;
-        balanceEl.textContent = balance.toFixed(2);
-        alert("Cashed out at " + multiplier.toFixed(2) + "x!");
-        clearInterval(interval);
-        resetGame();
-      };
+  // post-crash assistant advice
+  setHint("Crash recorded. After low crash, expect safer early exits (1.20–1.50x).");
+
+  running = false;
+  // allow a short cooldown then ready
+  setTimeout(()=>{$status.textContent="Idle"}, 800);
+}
+
+/** ============== ASSISTANT HINTS ============== **/
+function computeTargetSuggestion(){
+  // Simple heuristic from recent history
+  const recent = crashHistory.slice(-5);
+  const avg = recent.length ? (recent.reduce((a,b)=>a+b,0)/recent.length) : 1.8;
+  // If many low crashes, cash early; else push slightly
+  if(recent.filter(x=>x<1.35).length>=2){
+    return 1.25 + Math.random()*0.2; // 1.25–1.45
+  }
+  if(avg < 1.6) return 1.4 + Math.random()*0.5; // 1.4–1.9
+  if(avg < 2.2) return 1.6 + Math.random()*0.8; // 1.6–2.4
+  return 2.0 + Math.random()*1.2; // 2.0–3.2
+}
+
+function setHint(msg){ $hint.textContent = "Assistant: " + msg; }
+
+/** ============== GAME CONTROLS ============== **/
+function startRound(){
+  if(running) return;
+  const bet = Math.max(1, Number($bet.value||0));
+  if(bet>balance){ toast("Insufficient balance."); return; }
+  balance -= bet; updateBalance();
+  running = true; crashed = false;
+  setHint("Smooth takeoff… watch for turbulence around 1.5–2.2x");
+  resetRound();
+}
+
+function cashOut(){
+  if(!running || crashed) return;
+  const bet = Math.max(1, Number($bet.value||0));
+  const win = bet * currentMult;
+  balance += Math.floor(win);
+  updateBalance();
+  if(!muted) sfx.cash.play().catch(()=>{});
+  $status.textContent = "Cashed " + win.toFixed(2);
+  setHint("Nice timing! Consider smaller risks after a hot run.");
+  running = false;
+}
+
+function updateBalance(){ $balance.textContent = "$" + balance.toFixed(2); }
+
+/** ============== EVENTS ============== **/
+document.querySelectorAll("[data-quick]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    $bet.value = btn.getAttribute("data-quick");
+  });
+});
+
+el("btnMute").onclick = ()=>{
+  muted = !muted;
+  el("btnMute").textContent = muted ? "🔇" : "🔊";
+}
+
+$btnStart.onclick = ()=>{
+  targetSuggestion = computeTargetSuggestion();
+  $targetText.textContent = targetSuggestion ? targetSuggestion.toFixed(2) + "x" : "—";
+  setHint(targetSuggestion ? ("Aim near " + targetSuggestion.toFixed(2) + "x if unstable.") : "Analyzing…");
+  startRound();
+};
+
+$btnCash.onclick = cashOut;
+
+/** Intro / Terms **/
+$btnIntro.onclick = ()=>{ $intro.style.display="flex"; };
+$btnIntro2.onclick = ()=>{ $intro.style.display="flex"; };
+el("introClose").onclick = ()=>{ $intro.style.display="none"; };
+
+$btnTerms.onclick = ()=>{ $terms.style.display="flex"; };
+el("termsClose").onclick = ()=>{ $terms.style.display="none"; };
+$openTerms.onclick = ()=>{ $terms.style.display="flex"; };
+
+/** ============== PAYWALL + GUMROAD ============== **/
+function isPaid(){
+  try{
+    const v = localStorage.getItem("aviator_paid_v1");
+    return v === "yes";
+  }catch(e){return false;}
+}
+function markPaid(){
+  try{ localStorage.setItem("aviator_paid_v1", "yes"); }catch(e){}
+  paid = true; $paywall.style.display="none";
+  toast("Premium unlocked. Enjoy!");
+}
+
+async function verifyGumroadLicense(license){
+  // Gumroad license verify: POST https://api.gumroad.com/v2/licenses/verify
+  // Docs: no secret token required; uses product_permalink + license_key
+  const body = new URLSearchParams();
+  body.set("product_permalink", GUMROAD_PRODUCT_PERMALINK);
+  body.set("license_key", license.trim());
+  try{
+    const res = await fetch("https://api.gumroad.com/v2/licenses/verify", {
+      method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded"},
+      body
+    });
+    if(!res.ok){ throw new Error("Network"); }
+    const data = await res.json();
+    // success true/false; also check refunded/chargebacked
+    if(data && data.success && data.uses && !data.refunded && !data.chargebacked){
+      return true;
     }
+    return false;
+  }catch(e){ return false; }
+}
 
-    betButton.addEventListener("click", startGame);
+function openGumroadCheckout(){
+  // Open in external browser (within webview this will open system browser)
+  const url = `https://gumroad.com/l/${encodeURIComponent(GUMROAD_PRODUCT_PERMALINK)}?price=${PRICE_USD*100}`;
+  window.open(url, "_blank");
+  toast("Complete purchase, then tap ‘I already have a license’."); 
+}
 
-    resetGame();
-  </script>
+el("btnBuy").onclick = openGumroadCheckout;
+
+const $licenseBox = document.getElementById("licenseBox");
+el("btnIHaveKey").onclick = ()=>{ $licenseBox.style.display="grid"; };
+
+el("btnVerify").onclick = async ()=>{
+  const key = el("licenseKey").value||"";
+  if(!key || key.length<6){ toast("Enter a valid license key."); return; }
+  el("btnVerify").disabled = true;
+  el("btnVerify").textContent = "Verifying…";
+  const ok = await verifyGumroadLicense(key);
+  el("btnVerify").disabled = false;
+  el("btnVerify").textContent = "Verify & Unlock";
+  if(ok){ markPaid(); } else { toast("Invalid or inactive license. Check your Gumroad receipt."); }
+};
+
+/** ============== INIT ============== **/
+function toast(msg){
+  $toast.textContent = msg;
+  $toast.style.display = "block";
+  clearTimeout(toast._t); toast._t = setTimeout(()=>{$toast.style.display="none"}, 2400);
+}
+
+function boot(){
+  paid = isPaid();
+  if(paid){ $paywall.style.display="none"; }
+  updateBalance();
+  requestAnimationFrame(loop);
+}
+
+boot();
+
+/** ============== TAWK.TO CHAT ============== **/
+(function(){
+  try{
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src="https://embed.tawk.to/"+TAWK_WIDGET_ID;
+    s1.charset="UTF-8";
+    s1.setAttribute("crossorigin","*");
+    s0.parentNode.insertBefore(s1,s0);
+  }catch(e){}
+})();
+</script>
 </body>
-    </html>
+      </html>
