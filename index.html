@@ -1,54 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aviator</title>
-    <link rel="stylesheet" href="./style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Aviator Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f0f0f;
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    #game-container {
+      max-width: 800px;
+      margin: 50px auto;
+      background-color: #1a1a1a;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    canvas {
+      background-color: #222;
+      display: block;
+      margin: 0 auto 20px auto;
+      border: 2px solid #4CAF50;
+      border-radius: 5px;
+    }
+
+    #controls input {
+      padding: 10px;
+      font-size: 16px;
+      width: 150px;
+      margin-right: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    #controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #controls button:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
-
 <body>
-<div id="wrapper">
-
-
-
-    <div id="mid-wrapper">
-
-        <div id="header">
-            <div id="last-counters"></div>
-            <div>
-                <div id="balance">BALANCE: </div>
-                <div id="balance-amount">
-                    <div style="position: absolute; top: 5px; right: 10px; font-size: 19px; color: #ffffff;">€</div>
-                </div>
-            </div>
-
-        </div>
-
-        <div id="counterWrapper">
-            <div id="bg-image"></div>
-            <canvas id="canvas"></canvas>
-            <div id="counter">1.00</div>
-        </div>
-
-        <div id="bottom-wrapper">
-            <div id="input-wrapper">
-                <input type="number" id="bet-input" min="0" max="100" pattern="[0-9]{2}" />
-                <div style="position: absolute; top: 10px; right: 10px; font-size: 19px; color: #ffffff;">€</div>
-            </div>
-            <button id="bet-button">BET</button>
-        </div>
-
-        <div id="message-button">
-            <p id="message"></p>
-        </div>
-
+  <div id="game-container">
+    <h1>🚀 My Aviator Game</h1>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="controls">
+      <input type="number" id="betInput" placeholder="Enter Bet" />
+      <button id="betButton">Place Bet</button>
     </div>
-</div>
+    <div id="info">
+      <p>Balance: <span id="balance">1000</span></p>
+      <p>Multiplier: <span id="multiplier">1.00x</span></p>
+    </div>
+  </div>
 
-<script src="./script.js"></script>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let balance = 1000;
+    let multiplier = 1;
+    let running = false;
+
+    const balanceEl = document.getElementById("balance");
+    const multiplierEl = document.getElementById("multiplier");
+    const betInput = document.getElementById("betInput");
+    const betButton = document.getElementById("betButton");
+
+    function resetGame() {
+      multiplier = 1;
+      running = false;
+      multiplierEl.textContent = multiplier.toFixed(2) + "x";
+    }
+
+    function startGame() {
+      if (running) return;
+      const bet = parseFloat(betInput.value);
+      if (isNaN(bet) || bet <= 0 || bet > balance) {
+        alert("Invalid bet amount!");
+        return;
+      }
+
+      running = true;
+      let crashed = false;
+      const crashPoint = Math.random() * 10 + 1; // crash multiplier
+
+      const interval = setInterval(() => {
+        if (!running) {
+          clearInterval(interval);
+          return;
+        }
+        multiplier += 0.01;
+        multiplierEl.textContent = multiplier.toFixed(2) + "x";
+
+        if (multiplier >= crashPoint) {
+          crashed = true;
+          running = false;
+          balance -= bet;
+          balanceEl.textContent = balance.toFixed(2);
+          alert("Crashed! You lost the bet.");
+          clearInterval(interval);
+          resetGame();
+        }
+      }, 50);
+
+      betButton.onclick = () => {
+        if (!running) return;
+        running = false;
+        balance += bet * multiplier;
+        balanceEl.textContent = balance.toFixed(2);
+        alert("Cashed out at " + multiplier.toFixed(2) + "x!");
+        clearInterval(interval);
+        resetGame();
+      };
+    }
+
+    betButton.addEventListener("click", startGame);
+
+    resetGame();
+  </script>
 </body>
-
-</html>
+    </html>
