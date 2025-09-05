@@ -9,15 +9,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-          distribution: 'temurin'
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -30,14 +30,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v2
-
       - name: Add Android platform
         run: cordova platform add android
 
-      - name: Build APK
-        run: cordova build android --release
+      - name: Decode Keystore
+        run: |
+          echo $KEYSTORE_BASE64 | base64 --decode > aviator-release.keystore
+
+      - name: Build Release APK
+        run: |
+          cordova build android --release -- --keystore=aviator-release.keystore --storePassword=$KEYSTORE_PASSWORD --alias=$KEY_ALIAS --password=$KEY_PASSWORD
 
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v1
