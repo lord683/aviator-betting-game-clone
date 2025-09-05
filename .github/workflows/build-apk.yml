@@ -1,41 +1,67 @@
-name: Build Cordova Android APK
+name: Build APK
 
 on:
-  workflow_dispatch: # so you can trigger manually
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-android:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
-
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 11
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+          node-version: '20'
 
       - name: Install Cordova
         run: npm install -g cordova
 
       - name: Add Android platform
-        run: cordova platform add android@10
+        run: |
+          cordova platform remove android || true
+          cordova platform add android@10
 
-      - name: Build release APK
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download Android SDK command line tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip wget lib32stdc++6 lib32z1
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          mkdir -p $HOME/Android/cmdline-tools
+          unzip cmdline-tools.zip -d $HOME/Android/cmdline-tools
+          mv $HOME/Android/cmdline-tools/cmdline-tools $HOME/Android/cmdline-tools/latest
+
+      - name: Set Android environment variables
+        run: |
+          echo "ANDROID_SDK_ROOT=$HOME/Android" >> $GITHUB_ENV
+          echo "PATH=$HOME/Android/cmdline-tools/latest/bin:$HOME/Android/platform-tools:$PATH" >> $GITHUB_ENV
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses
+
+      - name: Install required SDKs
+        run: |
+          sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+
+      - name: Build APK
         run: cordova build android --release
 
-      - name: Upload APK artifact
+      - name: Prepare APK artifact
+        run: mkdir -p release-apk && cp platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk release-apk/
+
+      - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: AviatorPro-APK
-          path: platforms/android/app/build/outputs/apk/release/*.apk
+          path: release-apk/app-release-unsigned.apk
