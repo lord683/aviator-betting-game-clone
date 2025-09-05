@@ -9,14 +9,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -31,19 +25,18 @@ jobs:
         run: npm install
 
       - name: Add Android platform
-        run: cordova platform add android
-
-      - name: Decode Keystore
         run: |
-          echo $KEYSTORE_BASE64 | base64 --decode > aviator-release.keystore
+          cordova platform rm android || true
+          cordova platform add android
 
-      - name: Build Release APK
-        run: |
-          cordova build android --release -- --keystore=aviator-release.keystore --storePassword=$KEYSTORE_PASSWORD --alias=$KEY_ALIAS --password=$KEY_PASSWORD
+      - name: Build release APK
+        run: cordova build android --release
+          
+      - name: Verify APK
+        run: ls -lh platforms/android/app/build/outputs/apk/release/
 
-      - name: Upload APK to GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
         with:
-          files: platforms/android/app/build/outputs/apk/release/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: AviatorPro-APK
+          path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
