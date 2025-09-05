@@ -1,4 +1,4 @@
-name: Build and Sign APK
+name: Build Cordova APK
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,52 +17,30 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18'
 
       - name: Install Cordova
         run: npm install -g cordova
 
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Add Android platform
         run: |
           cordova platform remove android || true
-          cordova platform add android
+          cordova platform add android@10
 
       - name: Build APK (Release)
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          force-avd-creation: false
-          script: |
-            cordova build android --release
+        run: cordova build android --release
 
-      - name: Decode keystore
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > aviatorpro.keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-
-      - name: Sign APK
-        run: |
-          jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 \
-          -keystore aviatorpro.keystore \
-          -storepass $KEYSTORE_PASSWORD \
-          -keypass $KEY_PASSWORD \
-          platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk $KEY_ALIAS
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Align APK
-        run: |
-          zipalign -v -p 4 \
-          platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk \
-          release-app.apk
-
-      - name: Upload APK artifact
+      - name: Upload unsigned APK
         uses: actions/upload-artifact@v3
         with:
-          name: AviatorPro-APK
-          path: release-app.apk
+          name: AviatorPro-unsigned
+          path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
