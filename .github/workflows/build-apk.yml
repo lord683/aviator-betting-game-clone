@@ -27,41 +27,21 @@ jobs:
           cordova platform remove android || true
           cordova platform add android
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
+      - name: Build APK (Release)
+        uses: reactivecircus/android-emulator-runner@v2
         with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Download Android SDK
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip wget lib32stdc++6 lib32z1
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          mkdir -p $HOME/Android/cmdline-tools
-          unzip cmdline-tools.zip -d $HOME/Android/cmdline-tools
-          mv $HOME/Android/cmdline-tools/cmdline-tools $HOME/Android/cmdline-tools/latest
-
-      - name: Set Android environment variables
-        run: |
-          echo "export ANDROID_SDK_ROOT=$HOME/Android" >> $GITHUB_ENV
-          echo "export PATH=$HOME/Android/cmdline-tools/latest/bin:$HOME/Android/platform-tools:$PATH" >> $GITHUB_ENV
-
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses
-
-      - name: Install required SDKs
-        run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.1"
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          script: |
+            cordova build android --release
 
       - name: Decode keystore
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > aviatorpro.keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-
-      - name: Build APK
-        run: cordova build android --release
 
       - name: Sign APK
         run: |
